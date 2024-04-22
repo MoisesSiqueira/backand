@@ -29,6 +29,11 @@ mongoose
 // Public
 app.use(express.static(path.join(__dirname, "public")));
 
+app.use((req, res, next) => {
+  console.log("Oi eu sou o Middleware");
+  next();
+});
+
 // Rotas
 app.get("/", (req, res) => {
   res.send("Rota principal");
