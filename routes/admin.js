@@ -7,7 +7,19 @@ router.get("/", (req, res) => {
 });
 
 router.get("/posts", (req, res) => {
-  res.render("admin/categorias");
+  res.send("Pagina de posts");
+});
+
+router.get("/posts", (req, res) => {
+  Categoria.find()
+    .sort({ date: "desc" })
+    .then((categorias) => {
+      res.render("admin/categorias", { categorias: categorias });
+    })
+    .catch((err) => {
+      res.flash("error_msg", "Erro ao listar categorias: " + err);
+      res.redirect("/admin");
+    });
 });
 
 router.get("/categorias", (req, res) => {
@@ -68,6 +80,12 @@ router.post("/categorias/nova", (req, res) => {
         res.status(500).send("Erro ao salvar categoria");
       });
   }
+});
+
+router.get("/categorias/edit/:id", (req, res) => {});
+
+router.get("/teste", (req, res) => {
+  res.send("Teste");
 });
 
 module.exports = router;
