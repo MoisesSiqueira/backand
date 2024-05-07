@@ -18,7 +18,7 @@ app.set("view engine", "handlebars");
 // Mongoose
 mongoose.Promise = global.Promise;
 mongoose
-  .connect("mongodb://localhost/blogapp")
+  .connect("mongodb://localhost:27017/")
   .then(() => {
     console.log("Conectado ao MongoDB");
   })
@@ -28,11 +28,6 @@ mongoose
 
 // Public
 app.use(express.static(path.join(__dirname, "public")));
-
-app.use((req, res, next) => {
-  console.log("Oi eu sou o Middleware");
-  next();
-});
 
 // Rotas
 app.get("/", (req, res) => {
@@ -44,9 +39,8 @@ app.get("/posts", (req, res) => {
 });
 
 app.use("/admin", admin);
-
 // Outros
-const PORT = 8081;
+const PORT = 8089;
 app.listen(PORT, () => {
   console.log("Servidor rodando! ");
 });

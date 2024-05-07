@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const Categoria = require("../models/Categoria");
@@ -10,26 +11,15 @@ router.get("/posts", (req, res) => {
   res.send("Pagina de posts");
 });
 
-router.get("/posts", (req, res) => {
+router.get("/categorias", (req, res) => {
   Categoria.find()
     .sort({ date: "desc" })
     .then((categorias) => {
       res.render("admin/categorias", { categorias: categorias });
     })
     .catch((err) => {
-      res.flash("error_msg", "Erro ao listar categorias: " + err);
+      res.flash("Erro ao obter categorias: " + err);
       res.redirect("/admin");
-    });
-});
-
-router.get("/categorias", (req, res) => {
-  Categoria.find()
-    .then((categorias) => {
-      res.render("admin/categorias", { categorias });
-    })
-    .catch((err) => {
-      console.log("Erro ao obter categorias: " + err);
-      res.status(500).send("Erro ao obter categorias");
     });
 });
 
@@ -63,10 +53,10 @@ router.post("/categorias/nova", (req, res) => {
   if (erros.length > 0) {
     res.render("admin/addcategorias", { erros: erros });
   } else {
-    const novaCategoria = new Categoria({
+    const novaCategoria = {
       nome: req.body.nome,
       slug: req.body.slug,
-    });
+    };
 
     new Categoria(novaCategoria)
       .save()
@@ -75,17 +65,67 @@ router.post("/categorias/nova", (req, res) => {
         res.redirect("/admin/categorias");
       })
       .catch((err) => {
-        req.flash("error_msg", "Erro ao criar categoria: " + err);
+        res.flash(
+          "Erro_msg",
+          "Houve um erro ao salvar categoria, tente novamente"
+        );
         res.redirect("/admin");
-        res.status(500).send("Erro ao salvar categoria");
       });
-  }
+  } // This closing brace closes the route handler
+});
+router.get("/categorias/edit/:id", (req, res) => {
+  Categoria.findOne({ _id: req.params.id })
+    .then((categoria) => {
+      res.render("admin/editcategorias", { categoria: categoria });
+    })
+    .catch((err) => {
+      req.flash("error_msg", "Esta categoria não existe");
+      res.redirect("/admin/categorias");
+    });
+});
+router.post("/categorias/edit", (req, res) => {
+  Categoria.findOne({ _id: req.body.id })
+    .then((categoria) => {
+      categoria.nome = req.body.nome;
+      categoria.slug = req.body.slug;
+
+      categoria
+        .save()
+        .then(() => {
+          req.flash("success_msg", "Categoria editada com sucesso");
+          res.redirect("/admin/categorias");
+        })
+        .catch((err) => {
+          req.flash(
+            "error_msg",
+            "Houve um erro interno ao salvar a edição da categoria"
+          );
+          res.redirect("/admin/categorias");
+        });
+    })
+    .catch((err) => {
+      req.flash(
+        "error_msg",
+        "Houve um erro interno ao salvar e editar categoria"
+      );
+      res.redirect("/admin/categorias");
+    });
 });
 
-router.get("/categorias/edit/:id", (req, res) => {});
+router.post("/categorias/deletar", (req, res) => {
+  Categoria.remove({ _id: req.body.id })
+    .then(() => {
+      req.flash("success_msg", "Categoria deletada com sucesso");
+      res.redirect("/admin/categorias");
+    })
+    .catch((err) => {
+      req.flash("error_msg", "Houve um erro ao deletar categoria");
+      res.redirect("/admin/categorias");
+    });
+});
 
 router.get("/teste", (req, res) => {
-  res.send("Teste");
+  res.send("Isso é um teste");
 });
 
 module.exports = router;
