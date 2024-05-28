@@ -1,24 +1,50 @@
 const express = require("express");
 const exphbs = require("express-handlebars");
 const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
 const app = express();
 const admin = require("./routes/admin");
 const path = require("path");
+const mongoose = require("mongoose");
+const session = require("express-session");
+const flash = require("connect-flash");
+require("./models/Postagem");
+const Postagem = mongoose.model("postagens");
 
 // Configurações
+// Sessão
+app.use(
+  session({
+    secret: "cursodenode",
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+
+app.use(flash());
+
+// Middleware
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  next();
+});
+
 // Body Parser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Handlebars
-app.engine("handlebars", exphbs.create({ defaultLayout: "main" }).engine);
+const hbs = exphbs.create({ defaultLayout: "main" });
+app.engine("handlebars", hbs.engine);
 app.set("view engine", "handlebars");
 
 // Mongoose
 mongoose.Promise = global.Promise;
 mongoose
-  .connect("mongodb://localhost:27017/")
+  .connect("mongodb://localhost:27017/seuBancoDeDados", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log("Conectado ao MongoDB");
   })
@@ -31,7 +57,38 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Rotas
 app.get("/", (req, res) => {
-  res.send("Rota principal");
+  Postagem.find()
+    .lean()
+    .populate("categoria")
+    .sort({ date: "desc" })
+    .then((postagens) => {
+      res.render("index", { postagens: postagens });
+    })
+    .catch((err) => {
+      req.flash("error_msg", "Houve um erro interno");
+      res.redirect("/404");
+    });
+});
+
+app.get("/postagem/:slug", (req, res) => {
+  Postagem.findOne({ slug: req.params.slug })
+    .lean()
+    .then((postagem) => {
+      if (postagem) {
+        res.render("postagem/index", { postagem: postagem });
+      } else {
+        req.flash("error_msg", "Esta postagem não existe");
+        res.redirect("/");
+      }
+    })
+    .catch((err) => {
+      req.flash("error_msg", "Houve um erro interno");
+      res.redirect("/");
+    });
+});
+
+app.get("/404", (req, res) => {
+  res.send("Erro 404!");
 });
 
 app.get("/posts", (req, res) => {
@@ -39,8 +96,9 @@ app.get("/posts", (req, res) => {
 });
 
 app.use("/admin", admin);
+
 // Outros
-const PORT = 8089;
+const PORT = process.env.PORT || 8089;
 app.listen(PORT, () => {
-  console.log("Servidor rodando! ");
+  console.log(`Servidor rodando na porta ${PORT}`);
 });

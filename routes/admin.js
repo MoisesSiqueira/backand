@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const Categoria = require("../models/Categoria");
@@ -18,7 +17,7 @@ router.get("/categorias", (req, res) => {
       res.render("admin/categorias", { categorias: categorias });
     })
     .catch((err) => {
-      res.flash("Erro ao obter categorias: " + err);
+      req.flash("error_msg", "Erro ao obter categorias: " + err);
       res.redirect("/admin");
     });
 });
@@ -65,14 +64,15 @@ router.post("/categorias/nova", (req, res) => {
         res.redirect("/admin/categorias");
       })
       .catch((err) => {
-        res.flash(
-          "Erro_msg",
+        req.flash(
+          "error_msg",
           "Houve um erro ao salvar categoria, tente novamente"
         );
         res.redirect("/admin");
       });
-  } // This closing brace closes the route handler
+  }
 });
+
 router.get("/categorias/edit/:id", (req, res) => {
   Categoria.findOne({ _id: req.params.id })
     .then((categoria) => {
@@ -83,6 +83,7 @@ router.get("/categorias/edit/:id", (req, res) => {
       res.redirect("/admin/categorias");
     });
 });
+
 router.post("/categorias/edit", (req, res) => {
   Categoria.findOne({ _id: req.body.id })
     .then((categoria) => {
@@ -113,7 +114,7 @@ router.post("/categorias/edit", (req, res) => {
 });
 
 router.post("/categorias/deletar", (req, res) => {
-  Categoria.remove({ _id: req.body.id })
+  Categoria.deleteOne({ _id: req.body.id })
     .then(() => {
       req.flash("success_msg", "Categoria deletada com sucesso");
       res.redirect("/admin/categorias");
