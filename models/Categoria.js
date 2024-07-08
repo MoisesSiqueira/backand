@@ -16,5 +16,5 @@ const categoriaSchema = new Schema({
   },
 });
 
-const Categoria = mongoose.model("Categoria", categoriaSchema);
+const Categoria = mongoose.model("categorias", categoriaSchema); // Nome do modelo aqui deve ser "categorias"
 module.exports = Categoria;
