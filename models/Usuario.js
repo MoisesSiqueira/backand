@@ -12,6 +12,10 @@ const Usuario = new Schema({
   },
   senha: {
     type: String,
+    default: 0,
+  },
+  senha: {
+    type: String,
     required: true,
   },
 });
